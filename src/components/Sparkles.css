@@ -1,0 +1,17 @@
+.sparkle {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  background-color: yellow;
+  border-radius: 50%;
+  animation: twinkle 1.5s infinite;
+}
+
+@keyframes twinkle {
+  0%, 20%, 100% {
+    opacity: 0;
+  }
+  10%, 30% {
+    opacity: 1;
+  }
+}
