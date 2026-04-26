@@ -1,0 +1,811 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.layout{display:flex;height:600px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.sidebar{width:220px;min-width:220px;border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;background:var(--color-background-secondary);display:flex;flex-direction:column}
+.sidebar-section{padding:8px 0}
+.sidebar-label{padding:6px 14px 4px;font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em}
+.file-btn{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:5px 14px;cursor:pointer;font-size:12.5px;color:var(--color-text-secondary);text-align:left;border-left:2px solid transparent;transition:background .12s,color .12s}
+.file-btn:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.file-btn.active{background:var(--color-background-primary);color:var(--color-text-primary);border-left-color:#7F77DD;font-weight:500}
+.file-icon{font-size:13px;flex-shrink:0}
+.pane{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);flex-shrink:0}
+.filepath{font-size:12px;color:var(--color-text-secondary);font-family:var(--font-mono)}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin-left:auto}
+.badge-tsx{background:#E6F1FB;color:#185FA5}
+.badge-css{background:#EEEDFE;color:#534AB7}
+.badge-ts{background:#EAF3DE;color:#3B6D11}
+.badge-html{background:#FAEEDA;color:#854F0B}
+.code-area{flex:1;overflow:auto;padding:14px 18px;background:var(--color-background-primary)}
+pre{font-family:var(--font-mono);font-size:12px;line-height:1.65;color:var(--color-text-primary);white-space:pre;tab-size:2}
+.line{display:flex}
+.ln{color:var(--color-text-tertiary);min-width:32px;user-select:none;padding-right:14px;text-align:right;font-size:11px}
+.stats{display:flex;gap:16px;padding:7px 16px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);flex-shrink:0}
+.stat{font-size:11px;color:var(--color-text-tertiary)}
+.stat b{color:var(--color-text-secondary);font-weight:500}
+</style>
+
+<h2 class="sr-only">Anniversary webpage source code browser — all files including index.html</h2>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Root</div>
+      <button class="file-btn" onclick="show('html')"><span class="file-icon">◻</span>index.html</button>
+      <button class="file-btn" onclick="show('main')"><span class="file-icon">⚛</span>main.tsx</button>
+      <button class="file-btn" onclick="show('css')"><span class="file-icon">#</span>index.css</button>
+      <button class="file-btn" onclick="show('cn')"><span class="file-icon">⚙</span>utils/cn.ts</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">App</div>
+      <button class="file-btn" onclick="show('app')"><span class="file-icon">⚛</span>App.tsx</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Components</div>
+      <button class="file-btn" onclick="show('starfield')"><span class="file-icon">⚛</span>StarField.tsx</button>
+      <button class="file-btn" onclick="show('hearts')"><span class="file-icon">⚛</span>FloatingHearts.tsx</button>
+      <button class="file-btn" onclick="show('confetti')"><span class="file-icon">⚛</span>ConfettiBurst.tsx</button>
+      <button class="file-btn" onclick="show('cursor')"><span class="file-icon">⚛</span>CursorTrail.tsx</button>
+      <button class="file-btn" onclick="show('sparkles')"><span class="file-icon">⚛</span>Sparkles.tsx</button>
+      <button class="file-btn" onclick="show('progress')"><span class="file-icon">⚛</span>ScrollProgress.tsx</button>
+      <button class="file-btn" onclick="show('reveal')"><span class="file-icon">⚛</span>ScrollReveal.tsx</button>
+      <button class="file-btn" onclick="show('typewriter')"><span class="file-icon">⚛</span>TypewriterText.tsx</button>
+      <button class="file-btn" onclick="show('gallery')"><span class="file-icon">⚛</span>PhotoGallery.tsx</button>
+      <button class="file-btn" onclick="show('bucket')"><span class="file-icon">⚛</span>BucketList.tsx</button>
+    </div>
+  </div>
+  <div class="pane">
+    <div class="toolbar">
+      <span class="filepath" id="fp">Select a file</span>
+      <span class="badge" id="badge" style="display:none"></span>
+    </div>
+    <div class="code-area" id="code-area">
+      <pre style="color:var(--color-text-tertiary);font-size:13px;padding-top:40px;text-align:center">← Select a file to view its source</pre>
+    </div>
+    <div class="stats" id="stats" style="display:none">
+      <span class="stat">Lines: <b id="s-lines"></b></span>
+      <span class="stat">Size: <b id="s-size"></b></span>
+      <span class="stat">Type: <b id="s-type"></b></span>
+    </div>
+  </div>
+</div>
+
+<script>
+const files = {
+html: {path:'index.html', type:'HTML', code:`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0010" />
+    <meta name="description"
+          content="A surprise love letter for 100 beautiful days together" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'
+          viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:
+          ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:
+          wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <title>100 Days of Us 💗</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"><\/script>
+  </body>
+</html>`},
+
+main: {path:'src/main.tsx', type:'TSX', code:`import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);`},
+
+cn: {path:'src/utils/cn.ts', type:'TS', code:`import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}`},
+
+css: {path:'src/index.css', type:'CSS', code:`@import "tailwindcss";
+
+/* ─── theme tokens ─────────────────────────────────── */
+:root {
+  --font-serif: "Cormorant Garamond", "Georgia", serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --color-bg: #0a0010;
+  --color-rose-soft: rgba(255, 95, 143, 0.15);
+  --color-rose-glow: rgba(255, 95, 143, 0.35);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-sans);
+}
+
+body {
+  background: var(--color-bg);
+  color: white;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.modal-open { overflow: hidden; position: fixed; width: 100%; }
+::selection { background: rgba(255, 95, 143, 0.35); color: #fff; }
+img { -webkit-user-drag: none; user-select: none; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,95,143,0.18); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,95,143,0.35); }
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.7); }
+  50%       { opacity: 1;    transform: scale(1.4); }
+}
+.star-twinkle { animation: star-twinkle 3s ease-in-out infinite; will-change: opacity, transform; }
+
+@keyframes float-up {
+  0%   { transform: translateY(0) rotate(0deg) scale(0.7); opacity: 0; }
+  8%   { opacity: 0.5; }
+  85%  { opacity: 0.2; }
+  100% { transform: translateY(-110vh) rotate(360deg) scale(1); opacity: 0; }
+}
+.floating-heart { animation: float-up 14s linear infinite; will-change: transform, opacity; }
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  12%  { transform: scale(1.22); }
+  24%  { transform: scale(1); }
+  36%  { transform: scale(1.15); }
+  48%  { transform: scale(1); }
+}
+.heartbeat-inline { animation: heartbeat 1.6s ease-in-out infinite; display: inline-block; }
+
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50%       { transform: translateY(10px); opacity: 1; }
+}
+.scroll-bounce { animation: scroll-bounce 2.2s ease-in-out infinite; }
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-10px) translateX(0) rotate(0deg) scale(1); opacity: 1; }
+  25%  { transform: translateY(25vh) translateX(var(--drift,20px)) rotate(180deg) scale(0.9); }
+  50%  { transform: translateY(50vh) translateX(calc(var(--drift,20px)*-0.6)) rotate(360deg) scale(0.8); }
+  75%  { transform: translateY(75vh) translateX(var(--drift,20px)) rotate(540deg) scale(0.7); }
+  100% { transform: translateY(105vh) translateX(0) rotate(720deg) scale(0.5); opacity: 0; }
+}
+.confetti-piece { animation: confetti-fall var(--confetti-duration,3s) cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal { opacity: 0; }
+.reveal.visible { animation: reveal-up 0.9s cubic-bezier(0.22,1,0.36,1) forwards; }
+.reveal-delay-1 { animation-delay: 0.1s; }
+.reveal-delay-2 { animation-delay: 0.2s; }
+.reveal-delay-3 { animation-delay: 0.3s; }
+.reveal-delay-4 { animation-delay: 0.4s; }
+.reveal-delay-5 { animation-delay: 0.5s; }
+
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%       { transform: translateY(-12px) rotate(1deg); }
+}
+.gentle-float { animation: gentle-float 4s ease-in-out infinite; will-change: transform; }
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.shimmer-line::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  animation: shimmer 4s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.pulse-ring::before {
+  content: ""; position: absolute; inset: -4px; border-radius: 9999px;
+  border: 2px solid rgba(255,95,143,0.25);
+  animation: pulse-ring 2.2s ease-out infinite;
+}
+
+.cursor-trail-heart { pointer-events: none; font-family: serif; line-height: 1; }
+
+@media (max-width: 640px) {
+  .floating-heart:nth-child(n+10) { display: none; }
+  .star-twinkle:nth-child(n+40)   { display: none; }
+  .confetti-piece:nth-child(n+60) { display: none; }
+  .cursor-trail-heart             { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal { opacity: 1 !important; transform: none !important; }
+}`},
+
+app: {path:'src/App.tsx', type:'TSX', code:`import { useEffect, useState, useCallback, useRef } from "react";
+import StarField from "./components/StarField";
+import FloatingHearts from "./components/FloatingHearts";
+import ConfettiBurst from "./components/ConfettiBurst";
+import TypewriterText from "./components/TypewriterText";
+import ScrollReveal from "./components/ScrollReveal";
+import Sparkles from "./components/Sparkles";
+import ScrollProgress from "./components/ScrollProgress";
+import CursorTrail from "./components/CursorTrail";
+import BucketList from "./components/BucketList";
+
+const timeline = [
+  { icon: "💫", label: "Day 1",   text: "Two strangers became something more." },
+  { icon: "🌙", label: "Day 14",  text: "Late nights talking felt like falling." },
+  { icon: "☀️", label: "Day 30",  text: "One month of butterflies that never settled." },
+  { icon: "🌸", label: "Day 50",  text: "Half a century of days, all better with you." },
+  { icon: "⭐", label: "Day 75",  text: "I stopped counting reasons and just loved you." },
+  { icon: "💎", label: "Day 100", text: "Here — and more sure of us than ever." },
+];
+
+const reasons = [
+  "Your laugh is my favorite sound",
+  "You make silence comfortable",
+  "You remember the little things",
+  "The way you look at me",
+  "You believe in me more than I do",
+  "Your warmth on cold nights",
+  "How you say my name",
+  "Your courage when life is hard",
+  "The way you hold my hand",
+  "You make ordinary days magic",
+  "Your kindness to strangers",
+  "How you dance when you're happy",
+  "The stories you tell",
+  "Your patience with my flaws",
+  "Waking up to your messages",
+  "The way you care for everyone",
+  "Your smile when you're sleepy",
+  "How you make me want to be better",
+  "The sound of your voice",
+  "Every single moment with you",
+];
+
+export default function App() {
+  const [started, setStarted] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+  const [letterOpen, setLetterOpen] = useState(false);
+  const [confetti, setConfetti] = useState(false);
+  const [likedReasons, setLikedReasons] = useState<Set<number>>(new Set());
+  const [letterRevealed, setLetterRevealed] = useState(false);
+  const scrollYRef = useRef(0);
+
+  const handleStart = useCallback(() => {
+    setStarted(true);
+    setTimeout(() => setShowContent(true), 1200);
+  }, []);
+
+  const openLetter = useCallback(() => {
+    scrollYRef.current = window.scrollY;
+    document.body.classList.add("modal-open");
+    document.body.style.top = \`-\${window.scrollY}px\`;
+    setLetterOpen(true);
+    setConfetti(true);
+    setTimeout(() => setConfetti(false), 4500);
+    setTimeout(() => setLetterRevealed(true), 600);
+  }, []);
+
+  const closeLetter = useCallback(() => {
+    setLetterOpen(false);
+    setLetterRevealed(false);
+    document.body.classList.remove("modal-open");
+    document.body.style.top = "";
+    window.scrollTo(0, scrollYRef.current);
+  }, []);
+
+  const toggleLike = useCallback((index: number) => {
+    setLikedReasons((prev) => {
+      const next = new Set(prev);
+      next.has(index) ? next.delete(index) : next.add(index);
+      return next;
+    });
+  }, []);
+
+  const [elapsed, setElapsed] = useState(() => getElapsed());
+  useEffect(() => {
+    const id = setInterval(() => setElapsed(getElapsed()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const [toNext, setToNext] = useState(() => getCountdown(200));
+  useEffect(() => {
+    const id = setInterval(() => setToNext(getCountdown(200)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && letterOpen) closeLetter();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [letterOpen, closeLetter]);
+
+  // ... full render JSX (10 sections + letter modal)
+  // See full file in the repository
+}`},
+
+starfield: {path:'src/components/StarField.tsx', type:'TSX', code:`import { useMemo } from "react";
+
+export default function StarField() {
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 80 }, (_, i) => ({
+        id: i,
+        x: \`\${(i * 47 + 13) % 100}%\`,
+        y: \`\${(i * 31 + 7) % 100}%\`,
+        size: 1 + (i % 3),
+        delay: \`\${(i * 0.7) % 5}s\`,
+        duration: \`\${2 + (i % 4) * 0.8}s\`,
+        opacity: 0.3 + (i % 5) * 0.15,
+      })),
+    []
+  );
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {stars.map((star) => (
+        <span
+          key={star.id}
+          className="star-twinkle absolute rounded-full bg-white"
+          style={{
+            left: star.x,
+            top: star.y,
+            width: \`\${star.size}px\`,
+            height: \`\${star.size}px\`,
+            animationDelay: star.delay,
+            animationDuration: star.duration,
+            opacity: star.opacity,
+          }}
+        />
+      ))}
+    </div>
+  );
+}`},
+
+hearts: {path:'src/components/FloatingHearts.tsx', type:'TSX', code:`import { useMemo } from "react";
+
+export default function FloatingHearts() {
+  const hearts = useMemo(
+    () =>
+      Array.from({ length: 18 }, (_, i) => ({
+        id: i,
+        left: \`\${(i * 29 + 5) % 100}%\`,
+        delay: \`\${(i * 1.3) % 12}s\`,
+        duration: \`\${10 + (i % 5) * 3}s\`,
+        size: 10 + (i % 4) * 6,
+        opacity: 0.12 + (i % 3) * 0.08,
+      })),
+    []
+  );
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {hearts.map((heart) => (
+        <span
+          key={heart.id}
+          className="floating-heart absolute text-rose-300"
+          style={{
+            left: heart.left,
+            bottom: "-20px",
+            animationDelay: heart.delay,
+            animationDuration: heart.duration,
+            fontSize: \`\${heart.size}px\`,
+            opacity: heart.opacity,
+          }}
+        >
+          ♥
+        </span>
+      ))}
+    </div>
+  );
+}`},
+
+confetti: {path:'src/components/ConfettiBurst.tsx', type:'TSX', code:`import { useMemo } from "react";
+
+const colors = [
+  "#ff5f8f","#ff9a9e","#fecfef","#fbc2eb",
+  "#a18cd1","#f6d5f7","#ffdde1","#ee9ca7",
+  "#fcb69f","#ffecd2","#f8b500","#ff6b81",
+  "#ffd1ff","#c9b1ff","#ffb3c6","#fff1e6",
+];
+
+export default function ConfettiBurst({ active }: { active: boolean }) {
+  const pieces = useMemo(
+    () =>
+      Array.from({ length: 120 }, (_, i) => ({
+        id: i,
+        color: colors[i % colors.length],
+        left: \`\${(i * 37 + 11) % 100}%\`,
+        delay: \`\${(i % 18) * 0.07}s\`,
+        duration: \`\${2.2 + (i % 6) * 0.4}s\`,
+        size: 4 + (i % 5) * 3,
+        drift: ((i % 21) - 10) * 15,
+        shape: i % 3,
+      })),
+    []
+  );
+
+  if (!active) return null;
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[90] overflow-hidden" aria-hidden="true">
+      {pieces.map((p) => (
+        <span
+          key={p.id}
+          className="confetti-piece absolute"
+          style={{
+            left: p.left,
+            top: "-12px",
+            animationDelay: p.delay,
+            "--confetti-duration": p.duration,
+            "--drift": \`\${p.drift}px\`,
+            width: \`\${p.size}px\`,
+            height: p.shape === 0 ? \`\${p.size}px\` : \`\${p.size * 2.5}px\`,
+            backgroundColor: p.color,
+            borderRadius: p.shape === 0 ? "50%" : p.shape === 1 ? "2px" : "0",
+          } as React.CSSProperties}
+        />
+      ))}
+    </div>
+  );
+}`},
+
+cursor: {path:'src/components/CursorTrail.tsx', type:'TSX', code:`import { useEffect, useRef, useCallback } from "react";
+
+export default function CursorTrail() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const throttleRef = useRef(0);
+
+  const spawn = useCallback((x: number, y: number) => {
+    if (!containerRef.current) return;
+    const now = Date.now();
+    if (now - throttleRef.current < 80) return;
+    throttleRef.current = now;
+
+    const el = document.createElement("span");
+    el.textContent = "♥";
+    el.className = "cursor-trail-heart";
+    el.style.cssText = \`position:fixed;left:\${x}px;top:\${y}px;pointer-events:none;font-size:\${10 + Math.random() * 8}px;color:rgba(255,95,143,\${0.3 + Math.random() * 0.3});z-index:109;transition:all 0.8s ease-out;\`;
+    containerRef.current.appendChild(el);
+
+    requestAnimationFrame(() => {
+      el.style.transform = \`translateY(-\${30 + Math.random() * 40}px) rotate(\${Math.random() * 40 - 20}deg) scale(0)\`;
+      el.style.opacity = "0";
+    });
+
+    setTimeout(() => el.remove(), 900);
+  }, []);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => spawn(e.clientX, e.clientY);
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [spawn]);
+
+  return (
+    <div ref={containerRef} className="pointer-events-none fixed inset-0 z-[109] overflow-hidden" />
+  );
+}`},
+
+sparkles: {path:'src/components/Sparkles.tsx', type:'TSX', code:`import { useMemo } from "react";
+
+export default function Sparkles() {
+  const sparkles = useMemo(
+    () =>
+      Array.from({ length: 30 }, (_, i) => ({
+        id: i,
+        x: \`\${(i * 41 + 7) % 100}%\`,
+        y: \`\${(i * 29 + 11) % 100}%\`,
+        delay: \`\${(i * 0.8) % 6}s\`,
+        duration: \`\${1.5 + (i % 4) * 0.5}s\`,
+        size: 2 + (i % 3) * 2,
+      })),
+    []
+  );
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {sparkles.map((s) => (
+        <span
+          key={s.id}
+          className="sparkle absolute rounded-full"
+          style={{
+            left: s.x,
+            top: s.y,
+            width: \`\${s.size}px\`,
+            height: \`\${s.size}px\`,
+            background: \`radial-gradient(circle, rgba(255,215,186,0.9) 0%, rgba(255,182,193,0.4) 50%, transparent 100%)\`,
+            animation: \`star-twinkle \${s.duration} ease-in-out \${s.delay} infinite\`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}`},
+
+progress: {path:'src/components/ScrollProgress.tsx', type:'TSX', code:`import { useEffect, useState } from "react";
+
+export default function ScrollProgress() {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(h > 0 ? (window.scrollY / h) * 100 : 0);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-[110] h-[3px] bg-white/5">
+      <div
+        className="h-full bg-gradient-to-r from-rose-500 via-pink-400 to-rose-300 transition-[width] duration-100"
+        style={{ width: \`\${progress}%\` }}
+      />
+      {progress > 2 && (
+        <div
+          className="absolute top-0 h-full w-8 bg-gradient-to-r from-transparent to-white/30 blur-sm"
+          style={{ left: \`calc(\${progress}% - 32px)\` }}
+        />
+      )}
+    </div>
+  );
+}`},
+
+reveal: {path:'src/components/ScrollReveal.tsx', type:'TSX', code:`import { useEffect, useRef, type ReactNode } from "react";
+
+export default function ScrollReveal({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: ReactNode;
+  className?: string;
+  delay?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("visible");
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={\`reveal \${delay > 0 ? \`reveal-delay-\${Math.min(delay, 5)}\` : ""} \${className}\`}
+    >
+      {children}
+    </div>
+  );
+}`},
+
+typewriter: {path:'src/components/TypewriterText.tsx', type:'TSX', code:`import { useState, useEffect } from "react";
+
+export default function TypewriterText({
+  text,
+  delay = 0,
+  speed = 40,
+  className = "",
+  onComplete,
+}: {
+  text: string;
+  delay?: number;
+  speed?: number;
+  className?: string;
+  onComplete?: () => void;
+}) {
+  const [displayed, setDisplayed] = useState("");
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(timeout);
+  }, [delay]);
+
+  useEffect(() => {
+    if (!started) return;
+    if (displayed.length < text.length) {
+      const timer = setTimeout(() => {
+        setDisplayed(text.slice(0, displayed.length + 1));
+      }, speed);
+      return () => clearTimeout(timer);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [displayed, started, text, speed, onComplete]);
+
+  return (
+    <span className={className}>
+      {displayed}
+      {displayed.length < text.length && started && (
+        <span className="inline-block w-[2px] h-[1em] bg-current ml-0.5 animate-pulse align-middle" />
+      )}
+    </span>
+  );
+}`},
+
+gallery: {path:'src/components/PhotoGallery.tsx', type:'TSX', code:`import ScrollReveal from "./ScrollReveal";
+
+const photos = [
+  { src: "/images/us.jpg",                caption: "The moment I knew",    rotate: -2   },
+  { src: "/images/memory1.jpg",           caption: "Our quiet walks",      rotate: 1    },
+  { src: "/images/memory2.jpg",           caption: "Your favorite laugh",  rotate: -1   },
+  { src: "/images/memory3.jpg",           caption: "Under the same stars", rotate: 2    },
+  { src: "/images/couple2.jpg",           caption: "Chasing sunsets",      rotate: -1.5 },
+  { src: "/images/couple-silhouette.jpg", caption: "Just us, always",      rotate: 1.5  },
+];
+
+export default function PhotoGallery() {
+  return (
+    <div className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4
+                    sm:mt-14 sm:grid-cols-3 sm:gap-5 lg:gap-6">
+      {photos.map((photo, i) => (
+        <ScrollReveal key={photo.src} delay={Math.min(i + 1, 5)}>
+          <div
+            className="group relative aspect-[4/5] overflow-hidden rounded-xl sm:rounded-2xl"
+            style={{ transform: \`rotate(\${photo.rotate}deg)\` }}
+          >
+            <img
+              src={photo.src}
+              alt={photo.caption}
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+              loading="lazy"
+              draggable={false}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="absolute inset-x-0 bottom-0 translate-y-4 p-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+              <p className="text-sm font-light text-white sm:text-base"
+                 style={{ fontFamily: "var(--font-serif)" }}>
+                {photo.caption}
+              </p>
+            </div>
+            <div className="absolute -left-1 top-2 h-5 w-8 -rotate-6 bg-white/10 backdrop-blur-sm" />
+            <div className="absolute -right-1 bottom-2 h-5 w-8 rotate-6 bg-white/10 backdrop-blur-sm" />
+          </div>
+        </ScrollReveal>
+      ))}
+    </div>
+  );
+}`},
+
+bucket: {path:'src/components/BucketList.tsx', type:'TSX', code:`import { useState, useCallback } from "react";
+
+const items = [
+  { text: "Watch the sunrise together",               icon: "🌅" },
+  { text: "Cook a meal from scratch",                 icon: "🍝" },
+  { text: "Dance in the rain",                        icon: "🌧️" },
+  { text: "Travel somewhere neither of us has been",  icon: "✈️" },
+  { text: "Write each other letters by hand",         icon: "💌" },
+  { text: "Stargaze from a rooftop",                  icon: "🌟" },
+  { text: "Build a blanket fort",                     icon: "🏰" },
+  { text: "Take a spontaneous road trip",             icon: "🚗" },
+  { text: "Plant something together and watch it grow", icon: "🌱" },
+  { text: "Slow dance to our favorite song",          icon: "💃" },
+  { text: "Watch every movie on our shared list",     icon: "🎬" },
+  { text: "Make a time capsule for our future selves",icon: "⏳" },
+];
+
+export default function BucketList() {
+  const [checked, setChecked] = useState<Set<number>>(new Set());
+
+  const toggle = useCallback((i: number) => {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  }, []);
+
+  return (
+    <div className="mx-auto mt-10 grid max-w-3xl grid-cols-1 gap-3 sm:mt-14 sm:grid-cols-2">
+      {items.map((item, i) => (
+        <button
+          key={item.text}
+          onClick={() => toggle(i)}
+          className={\`group flex items-center gap-3 rounded-xl border p-4 text-left
+            transition-all duration-500 sm:rounded-2xl sm:p-5 \${
+            checked.has(i)
+              ? "border-rose-400/30 bg-rose-500/10"
+              : "border-white/8 bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.06]"
+          }\`}
+        >
+          <span className={\`flex h-8 w-8 flex-shrink-0 items-center justify-center
+            rounded-lg border text-base transition-all duration-300
+            sm:h-9 sm:w-9 sm:text-lg \${
+              checked.has(i)
+                ? "border-rose-400/40 bg-rose-500/20 scale-110"
+                : "border-white/10 bg-white/5 group-hover:border-white/20"
+            }\`}>
+            {checked.has(i) ? "✓" : item.icon}
+          </span>
+          <span className={\`text-sm transition-all duration-300 sm:text-base \${
+            checked.has(i)
+              ? "text-rose-200 line-through decoration-rose-400/40"
+              : "text-rose-100/60 group-hover:text-rose-100/80"
+          }\`}>
+            {item.text}
+          </span>
+        </button>
+      ))}
+      <div className="col-span-full mt-2 text-center">
+        <p className="text-xs text-rose-200/30">
+          {checked.size} of {items.length} dreams checked off
+        </p>
+      </div>
+    </div>
+  );
+}`}
+};
+
+const badgeClass = {TSX:'badge-tsx', CSS:'badge-css', TS:'badge-ts', HTML:'badge-html'};
+
+function show(key) {
+  const f = files[key];
+  document.getElementById('fp').textContent = f.path;
+  const badge = document.getElementById('badge');
+  badge.textContent = f.type;
+  badge.className = 'badge ' + (badgeClass[f.type]||'');
+  badge.style.display = 'inline-block';
+
+  const lines = f.code.split('\n');
+  const html = lines.map((line, i) => {
+    const safe = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="line"><span class="ln">${i+1}</span><span>${safe}</span></div>`;
+  }).join('');
+  document.getElementById('code-area').innerHTML = `<pre>${html}</pre>`;
+
+  const bytes = new TextEncoder().encode(f.code).length;
+  document.getElementById('s-lines').textContent = lines.length;
+  document.getElementById('s-size').textContent = bytes < 1024 ? bytes + ' B' : (bytes/1024).toFixed(1) + ' KB';
+  document.getElementById('s-type').textContent = f.type;
+  document.getElementById('stats').style.display = 'flex';
+
+  document.querySelectorAll('.file-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.file-btn').forEach(b => {
+    if(b.getAttribute('onclick') === `show('${key}')`) b.classList.add('active');
+  });
+}
+
+show('html');
+</script>
