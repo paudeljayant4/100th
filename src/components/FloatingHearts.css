@@ -1,0 +1,21 @@
+.floating-heart {
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  background-color: pink;
+  border-radius: 50%;
+  opacity: 0.8;
+  animation: float 5s infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
